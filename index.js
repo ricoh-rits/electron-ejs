@@ -145,6 +145,9 @@ function ParsePath(u)
   //https://github.com/jmjuanes/electron-ejs/pull/9
   pname = pname.replace(/\s/g, ' ').replace(/%20/g, ' ');
 
+  //Decode URL
+  pname = decodeURI(pname);
+
   //Return the path name
   return pname;
 }
