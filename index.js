@@ -15,11 +15,11 @@ var app = electron.app;
 //Main function
 var ElectronEjs = function(data, options)
 {
-  //Get this
-  var self = this;
+  this.data = data;
+  this.options = options;
 
   //Check for undefined emit
-  if(typeof self.emit === 'undefined')
+  if(typeof this.emit === 'undefined')
   {
     //Throw error
     throw Error("This initialization is obsolete! Please look documentation for more informations.");
@@ -29,19 +29,19 @@ var ElectronEjs = function(data, options)
   }
 
   //Check data
-  if(typeof data === 'undefined'){ var data = {}; }
+  if(typeof this.data === 'undefined'){ this.data = {}; }
 
   //Check options
-  if(typeof options === 'undefined'){ var options = {}; }
+  if(typeof this.options === 'undefined'){ this.options = {}; }
 
   //App ready event
-  app.on('ready', function()
+  app.on('ready', () =>
   {
     //Import protocol
     var protocol = electron.protocol;
 
     //Intercept the file protocol
-    protocol.interceptBufferProtocol('file', function(request, callback)
+    protocol.interceptBufferProtocol('file', (request, callback) =>
     {
       //Get the file
       var file = ParsePath(request.url);
@@ -50,13 +50,13 @@ var ElectronEjs = function(data, options)
       var extension = path.extname(file);
 
       //Check if path exists and is a file
-      pStat.isFile(file, function(exists)
+      pStat.isFile(file, (exists) =>
       {
         //Check if file doesn't exists
         if(exists === false)
         {
           //Emit error
-          self.emit("error", "File not found!");
+          this.emit("error", "File not found!");
 
           //Return file not found
           return callback(-6);
@@ -66,19 +66,19 @@ var ElectronEjs = function(data, options)
         if(extension === '.ejs')
         {
           //Add the path to options
-          options.filename = file;
+          this.options.filename = file;
 
           //Render template function
-          var renderTemplate = function()
+          var renderTemplate = () =>
           {
             //Render the full file
-            ejs.renderFile(file, data, options, function(err, content)
+            ejs.renderFile(file, this.data, this.options, (err, content) =>
             {
               //Check for error
               if(err)
               {
                 //Emit error
-                self.emit('error', err);
+                this.emit('error', err);
 
                 //Unexpected error
                 return callback(-9);
@@ -90,7 +90,7 @@ var ElectronEjs = function(data, options)
           };
 
           //Check for event before render
-          if(!self.emit('before-render', file, data, options, renderTemplate))
+          if(!this.emit('before-render', file, this.data, this.options, renderTemplate))
           {
             //Render the template
             renderTemplate();
@@ -99,13 +99,13 @@ var ElectronEjs = function(data, options)
         else
         {
           //Read the file content
-          fs.readFile(file, function(err, content)
+          fs.readFile(file, (err, content) =>
           {
             //Check for error
             if(err)
             {
               //Emit error
-              self.emit('error', err);
+              this.emit('error', err);
 
               //Generic failure
               return callback(-2);
